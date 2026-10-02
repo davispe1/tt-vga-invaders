@@ -9,12 +9,28 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-Tetris on an 8x20 board rendered as 640x480 VGA (TinyVGA PMOD). The board is stored in a 160-bit circular shift register that rotates one bit per clock; since 800 = 5 x 160, the ring phase is a fixed function of the horizontal pixel position, so each pixel reads its cell without a RAM. Game logic runs from the 25.175 MHz pixel clock. Audio is output on uio[7].
+A compact Space Invaders for a single tile, with 640x480 VGA output (TinyVGA PMOD) and 1-bit sound.
+
+A formation of 8x4 invaders marches across the screen and steps down every time it touches an edge.
+The player has one shot on screen at a time and the invaders fire one shot back.
+There is no framebuffer: every pixel is computed on the fly from a handful of registers
+(32 "alive" bits, formation position, player and bullet positions). Collisions, edge detection and
+choosing which invader fires are all detected while the picture is being drawn, so they cost almost no logic.
+
+The formation speeds up as invaders are destroyed. Clearing all 32 starts a new wave.
+The score (top left) counts 10 points per invader and the remaining lives are shown top right.
+The game ends when the player loses all 3 lives or the invaders reach the player's row.
 
 ## How to test
 
-Connect a TinyVGA PMOD to the outputs and a VGA monitor. Use ui[0] to move left, ui[1] to move right, ui[2] to rotate and ui[3] to drop fast. Reset with rst_n. Audio (square wave) is on uio[7].
+Connect a TinyVGA PMOD and a VGA monitor, and buttons to the inputs:
+
+- ui[0]: move left
+- ui[1]: move right
+- ui[2]: fire (also restarts the game after game over)
+
+Reset with rst_n. Sound is a square wave on uio[7]: marching beat, shot, explosion and player hit.
 
 ## External hardware
 
-TinyVGA PMOD, VGA monitor, 4 buttons on ui[0..3], optional speaker/audio PMOD on uio[7].
+TinyVGA PMOD, VGA monitor, 3 buttons on ui[0..2], optional speaker/audio PMOD on uio[7].

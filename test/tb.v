@@ -7,11 +7,14 @@
 module tb ();
 
   // Dump the signals to a FST file. You can view it with gtkwave or surfer.
+  // Disabled by default: the demo test simulates many frames. Build with -DDUMP_FST to enable.
+`ifdef DUMP_FST
   initial begin
     $dumpfile("tb.fst");
     $dumpvars(0, tb);
     #1;
   end
+`endif
 
   // Wire up the inputs and outputs:
   reg clk;
@@ -28,7 +31,7 @@ module tb ();
 `endif
 
   // Replace tt_um_example with your module name:
-  tt_um_davispe1_tetris user_project (
+  tt_um_davispe1_invaders user_project (
 
       // Include power ports for the Gate Level test:
 `ifdef GL_TEST
