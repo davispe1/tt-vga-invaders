@@ -49,4 +49,29 @@ module tb ();
       .rst_n  (rst_n)     // not reset
   );
 
+`ifndef GL_TEST
+  // Frame capture for the demo test (RTL only): set cap_en and cap_id from cocotb and the
+  // next full frame is written as raw uo_out bytes (640x480) to output/frame_<cap_id>.raw.
+  reg        cap_en = 1'b0;
+  reg  [7:0] cap_id = 8'd0;
+  reg        cap_on = 1'b0;
+  integer    cap_fd;
+  wire [9:0] cap_x = user_project.hvsync_gen.hpos;
+  wire [9:0] cap_y = user_project.hvsync_gen.vpos;
+
+  always @(posedge clk) begin
+    if (cap_en && !cap_on && cap_x == 0 && cap_y == 0) begin
+      cap_fd = $fopen($sformatf("output/frame_%0d.raw", cap_id), "wb");
+      cap_on <= 1'b1;
+    end
+    if ((cap_on || (cap_en && cap_x == 0 && cap_y == 0)) && cap_x < 640 && cap_y < 480)
+      $fwrite(cap_fd, "%c", uo_out);
+    if (cap_on && cap_x == 0 && cap_y == 480) begin
+      $fclose(cap_fd);
+      cap_on <= 1'b0;
+      cap_en <= 1'b0;
+    end
+  end
+`endif
+
 endmodule

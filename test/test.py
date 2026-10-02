@@ -1,6 +1,6 @@
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles
+from cocotb.triggers import ClockCycles, Timer
 
 import os
 import glob
@@ -135,8 +135,7 @@ async def play_demo(dut):
     if os.environ.get("GATES") == "yes":
         return
 
-    H_TOTAL, V_TOTAL, H_DISPLAY, V_DISPLAY = 800, 525, 640, 480
-    FRAME = H_TOTAL * V_TOTAL
+    FRAME_NS = 800 * 525 * 40
 
     palette = [bytes(3)] * 256
     for r1, r0, g1, g0, b1, b0 in itertools.product(range(2), repeat=6):
@@ -153,31 +152,35 @@ async def play_demo(dut):
     dut.rst_n.value = 0
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
-    # Align to the start of a frame (output is registered one cycle after hpos/vpos)
-    await ClockCycles(dut.clk, 1)
-
-    async def capture(name):
-        fb = bytearray(V_DISPLAY * H_DISPLAY * 3)
-        for j in range(V_DISPLAY):
-            for i in range(H_TOTAL):
-                if i < H_DISPLAY:
-                    o = 3 * (j * H_DISPLAY + i)
-                    fb[o:o+3] = palette[int(dut.uo_out.value)]
-                await ClockCycles(dut.clk, 1)
-        await ClockCycles(dut.clk, H_TOTAL * (V_TOTAL - V_DISPLAY))
-        Image.frombytes('RGB', (H_DISPLAY, V_DISPLAY), bytes(fb)).save(f"output/{name}.png")
-        dut._log.info(f"Saved {name}")
 
     os.makedirs("output", exist_ok=True)
-    await capture("demo0_start")
+    shots = 0
 
-    dut.ui_in.value = 0b001          # left for 2 frames, so the shot lines up with an invader
-    await ClockCycles(dut.clk, FRAME * 3)
+    async def capture(name):
+        nonlocal shots
+        dut.cap_id.value = shots
+        dut.cap_en.value = 1
+        await Timer(2 * FRAME_NS, unit="ns")
+        raw = open(f"output/frame_{shots}.raw", "rb").read()
+        img = b"".join(palette[b] for b in raw)
+        Image.frombytes("RGB", (640, 480), img).save(f"output/{name}.png")
+        dut._log.info(f"Saved {name} ({len(raw)} pixels)")
+        shots += 1
+
+    async def frames(n):
+        await Timer(n * FRAME_NS, unit="ns")
+
+    await capture("demo0_start")
+    dut.ui_in.value = 0b001          # left for a moment, so the shot lines up with an invader
+    await frames(4)
     dut.ui_in.value = 0b100          # hold fire
-    await ClockCycles(dut.clk, FRAME * 25)
+    await frames(20)
     await capture("demo1_shooting")
-    await ClockCycles(dut.clk, FRAME * 40)
+    await frames(60)
     await capture("demo2_kills")
     dut.ui_in.value = 0b110          # right + fire
-    await ClockCycles(dut.clk, FRAME * 60)
+    await frames(120)
     await capture("demo3_later")
+    dut.ui_in.value = 0b101          # left + fire
+    await frames(300)
+    await capture("demo4_much_later")

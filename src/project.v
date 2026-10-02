@@ -47,12 +47,12 @@ module tt_um_davispe1_invaders(
   reg  [4:0] kills;           // aliens eliminados en esta oleada
   reg        edge_l, edge_r;  // un alien toco el borde (se recoge al dibujar)
   reg        low;             // un alien llego a la fila del jugador
-  reg  [7:0] plx;             // x del jugador en pasos de 4 px
+  reg  [6:0] plx;             // x del jugador en pasos de 8 px
   reg        pba;             // bala del jugador activa
-  reg  [7:0] pbx;             // pasos de 4 px
+  reg  [6:0] pbx;             // pasos de 8 px (la bala ocupa la mitad derecha)
   reg  [5:0] pby;             // pasos de 8 px
   reg        eba;             // bala enemiga activa
-  reg  [7:0] ebx;
+  reg  [6:0] ebx;
   reg  [5:0] eby;
   reg        efound;          // hay un alien que puede disparar este frame
   reg        fpar;            // paridad de frame (bala enemiga a media velocidad)
@@ -92,7 +92,7 @@ module tt_um_davispe1_invaders(
                alive[{arow, acol}] && half[mcol];
 
   // ---------------- Jugador y balas ----------------
-  wire [7:0] sx = x[9:2] - plx;
+  wire [7:0] sx = x[9:2] - {plx, 1'b0};
   reg  [7:0] ship;
   always @(*) begin
     case (y[3:2])
@@ -103,8 +103,8 @@ module tt_um_davispe1_invaders(
   end
   wire ship_px = (y[9:4] == 6'd28) && (sx[7:3] == 5'd0) && ship[sx[2:0]];   // y 448..463
 
-  wire pb_px = pba && (x[9:2] == pbx) && ~y[9] && (y[8:3] == pby);
-  wire eb_px = eba && (x[9:2] == ebx) && ~y[9] && (y[8:3] == eby);
+  wire pb_px = pba && x[2] && (x[9:3] == pbx) && ~y[9] && (y[8:3] == pby);
+  wire eb_px = eba && x[2] && (x[9:3] == ebx) && ~y[9] && (y[8:3] == eby);
 
   wire kill = pb_px & al_px;      // bala del jugador sobre un alien
   wire hit  = eb_px & ship_px;    // bala enemiga sobre el jugador
@@ -125,7 +125,7 @@ module tt_um_davispe1_invaders(
       lives  <= 2'd3;
       ones   <= 4'd0;
       tens   <= 4'd0;
-      plx    <= 8'd76;
+      plx    <= 7'd38;
       pba    <= 1'b0;
       eba    <= 1'b0;
       fpar   <= 1'b0;
@@ -144,7 +144,7 @@ module tt_um_davispe1_invaders(
         if (&y[8:6])          low    <= 1'b1;            // y 448..479
         // El ultimo alien dibujado en la columna elegida es el mas bajo: dispara el
         if (~eba && acol == lfsr[2:0] && scol == 3'd3) begin
-          ebx    <= x[9:2];
+          ebx    <= x[9:3];
           eby    <= y[8:3];
           efound <= 1'b1;
         end
@@ -212,9 +212,11 @@ module tt_um_davispe1_invaders(
             stimer <= stimer + 5'd1;
           end
 
-          // Jugador
-          if (btn[0] && plx != 8'd0)        plx <= plx - 8'd1;
-          else if (btn[1] && plx != 8'd152) plx <= plx + 8'd1;
+          // Jugador: 8 px cada 2 frames
+          if (fpar) begin
+            if (btn[0] && plx != 7'd0)       plx <= plx - 7'd1;
+            else if (btn[1] && plx != 7'd76) plx <= plx + 7'd1;
+          end
 
           // Bala del jugador
           if (pba) begin
@@ -222,7 +224,7 @@ module tt_um_davispe1_invaders(
             else             pby <= pby - 6'd1;
           end else if (btn[2]) begin
             pba   <= 1'b1;
-            pbx   <= plx + 8'd3;
+            pbx   <= plx + 7'd1;
             pby   <= 6'd55;
             snd_k <= 2'd1;
             snd_t <= 4'd5;
@@ -325,11 +327,7 @@ module tt_um_davispe1_invaders(
   wire [1:0] G = video_active ? rgb[3:2] : 2'b00;
   wire [1:0] B = video_active ? rgb[1:0] : 2'b00;
 
-  reg [7:0] vga_q;
-  always @(posedge clk) begin
-    vga_q <= {hsync, B[0], G[0], R[0], vsync, B[1], G[1], R[1]};
-  end
-  assign uo_out = vga_q;
+  assign uo_out = {hsync, B[0], G[0], R[0], vsync, B[1], G[1], R[1]};
 
   // ---------------- Sonido ----------------
   reg tone;
