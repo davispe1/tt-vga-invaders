@@ -34,7 +34,7 @@ dfflibmap -liberty hd.lib {du.replace('-dont_use *_1 ','-dont_use *dfxtp_1 ') if
 abc -liberty hd.lib {du}
 opt_clean
 stat -liberty hd.lib"""
-        r = subprocess.run(["yosys", "-q", "-p", ys.replace("\n", "; ")], capture_output=True, text=True)
+        r = subprocess.run(["yowasp-yosys", "-p", ys.replace("\n", "; ")], capture_output=True, text=True)
         out = r.stdout + r.stderr
         m = re.findall(r"Chip area for module.*?:\s*([0-9.]+)", out)
         ff = re.findall(r"(\d+)\s+(?:[0-9.E+]+\s+)?sky130_fd_sc_hd__dfxtp", out)
