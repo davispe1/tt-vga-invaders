@@ -1,4 +1,4 @@
-import subprocess, re, os, sys
+import subprocess, re, os, sys, json
 src = open("src/project.v").read()
 TOP = "tt_um_davispe1_invaders"
 
@@ -28,21 +28,27 @@ res = {}
 for name, code in V.items():
     open("v.v", "w").write(code)
     for du in (DU, ""):
-        ys = f"""read_verilog -sv v.v src/hvsync_generator.v
+        dffdu = "-dont_use *dfxtp_1 -dont_use *dfxtp_4" if du else ""
+        open("s.ys", "w").write(f"""read_verilog -sv v.v src/hvsync_generator.v
 synth -flatten -top {TOP}
-dfflibmap -liberty hd.lib {du.replace('-dont_use *_1 ','-dont_use *dfxtp_1 ') if du else ''}
+dfflibmap -liberty hd.lib {dffdu}
 abc -liberty hd.lib {du}
 opt_clean
-stat -liberty hd.lib"""
-        r = subprocess.run(["yowasp-yosys", "-p", ys.replace("\n", "; ")], capture_output=True, text=True)
-        out = r.stdout + r.stderr
-        m = re.findall(r"Chip area for module.*?:\s*([0-9.]+)", out)
-        ff = re.findall(r"(\d+)\s+(?:[0-9.E+]+\s+)?sky130_fd_sc_hd__dfxtp", out)
-        if m:
-            res[name] = (float(m[-1]), sum(map(int, ff)) if ff else -1, "du" if du else "plain")
+tee -q -o stat.json stat -json -liberty hd.lib
+""")
+        if os.path.exists("stat.json"):
+            os.remove("stat.json")
+        r = subprocess.run(["yowasp-yosys", "-q", "-s", "s.ys"], capture_output=True, text=True)
+        try:
+            j = json.load(open("stat.json"))
+            mod = j["modules"][next(iter(j["modules"]))] if "modules" in j else j
+            area = mod.get("area") or j.get("design", {}).get("area")
+            cells = mod.get("num_cells_by_type", {})
+            ff = sum(v for k, v in cells.items() if "dfxtp" in k)
+            res[name] = (float(area), ff, "du" if du else "plain")
             break
-        print(name, "FAILED", "
-".join(l for l in out.splitlines() if "rea" in l or "dfxtp" in l or "rror" in l)[-1500:])
+        except Exception as e:
+            print(name, "FAILED", repr(e), (r.stdout + r.stderr)[-600:])
 base = res["A_baseline"][0]
 print(f"{'variant':28s} {'area':>9s} {'delta':>8s} {'FFs':>4s}")
 for k, (a, ff, mode) in res.items():
