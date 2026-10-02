@@ -41,7 +41,8 @@ stat -liberty hd.lib"""
         if m:
             res[name] = (float(m[-1]), sum(map(int, ff)) if ff else -1, "du" if du else "plain")
             break
-        print(name, "FAILED", out[-800:])
+        print(name, "FAILED", "
+".join(l for l in out.splitlines() if "rea" in l or "dfxtp" in l or "rror" in l)[-1500:])
 base = res["A_baseline"][0]
 print(f"{'variant':28s} {'area':>9s} {'delta':>8s} {'FFs':>4s}")
 for k, (a, ff, mode) in res.items():
