@@ -5,7 +5,7 @@
 
 `default_nettype none
 
-module tt_um_vga_example(
+module tt_um_davispe1_tetris(
   input  wire [7:0] ui_in,    // [0] izquierda, [1] derecha, [2] rotar, [3] caida rapida
   output wire [7:0] uo_out,   // TinyVGA PMOD
   input  wire [7:0] uio_in,

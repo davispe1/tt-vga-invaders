@@ -9,12 +9,12 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-Explain how your project works
+Tetris on an 8x20 board rendered as 640x480 VGA (TinyVGA PMOD). The board is stored in a 160-bit circular shift register that rotates one bit per clock; since 800 = 5 x 160, the ring phase is a fixed function of the horizontal pixel position, so each pixel reads its cell without a RAM. Game logic runs from the 25.175 MHz pixel clock. Audio is output on uio[7].
 
 ## How to test
 
-Explain how to use your project
+Connect a TinyVGA PMOD to the outputs and a VGA monitor. Use ui[0] to move left, ui[1] to move right, ui[2] to rotate and ui[3] to drop fast. Reset with rst_n. Audio (square wave) is on uio[7].
 
 ## External hardware
 
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+TinyVGA PMOD, VGA monitor, 4 buttons on ui[0..3], optional speaker/audio PMOD on uio[7].
