@@ -7,20 +7,22 @@ def rep(s, a, b):
     return s.replace(a, b)
 
 V = {}
-V["A_baseline"] = src
-V["B_no_text"] = rep(src, "wire txt = top && (in_sc || in_lv) && (cx != 2'd3) && font;", "wire txt = 1'b0;")
-V["C_no_sound"] = rep(src, "wire audio = tone & (snd_t != 4'd0);", "wire audio = 1'b0;")
-V["D_no_enemy_bullet"] = rep(src, "wire eb_px = eba && (x[9:2] == ebx) && ~y[9] && (y[8:3] == eby);", "wire eb_px = 1'b0;")
-V["E_no_player_bullet"] = rep(src, "wire pb_px = pba && (x[9:2] == pbx) && ~y[9] && (y[8:3] == pby);", "wire pb_px = 1'b0;")
-s = rep(src, "alive[{arow, acol}] && half[mcol]", "half[mcol]")
-V["F_no_alive_array"] = rep(s, "else if (kill) alive[{arow, acol}] <= 1'b0;", "")
-V["G_no_vga_reg"] = rep(src, "assign uo_out = vga_q;", "assign uo_out = {hsync, B[0], G[0], R[0], vsync, B[1], G[1], R[1]};")
-V["H_no_ship"] = rep(src, "wire ship_px = (y[9:4] == 6'd28) && (sx[7:3] == 5'd0) && ship[sx[2:0]];", "wire ship_px = 1'b0;")
-s = rep(src, "wire [9:0] rx   = x - {fx, 3'b000};", "wire [9:0] rx   = x - 10'd192;")
-V["I_fixed_formation"] = rep(s, "wire [9:0] ry   = y - {1'b0, fy, 4'b0000};", "wire [9:0] ry   = y - 10'd64;")
-V["J_no_sprite_rom"] = rep(src, "alive[{arow, acol}] && half[mcol]", "alive[{arow, acol}]")
+K = open("exp/K_opt.v").read()
+V["K_opt"] = K
+V["K1_no_alive_write"] = rep(K, "else if (kill) alive[{arow, acol}] <= 1'b0;", "")
+V["K2_no_alive_read"] = rep(K, "alive[{arow, acol}] && half[mcol]", "half[mcol]")
+V["K3_no_bcd_inc"] = rep(K, "ones <= ones + 4'd1;", "ones <= ones;")
+V["K4_fixed_speed"] = rep(K, "if (stimer >= ~kills) begin", "if (&stimer) begin")
+V["K5_no_spawn_capture"] = rep(K, "        if (~eba && acol == lfsr[2:0] && scol == 3'd3) begin", "        if (1'b0) begin")
+V["K6_no_edge_flags"] = rep(rep(K, "if (x[9:3] == 7'd0)   edge_l <= 1'b1;", ""), "if (x[9:3] == 7'd79)  edge_r <= 1'b1;", "")
+V["K7_no_restart_logic"] = rep(K, "wire restart = ~rst_n | (ftick & over & btn[2] & (&stimer));", "wire restart = ~rst_n;")
+V["K8_no_hit"] = rep(K, "wire hit  = eb_px & ship_px;", "wire hit  = 1'b0;")
+V["K9_no_bb"] = rep(K, "wire bb   = pb_px & eb_px;", "wire bb   = 1'b0;")
+V["K10_no_lives_digit"] = rep(K, "wire       in_lv = (x[9:5] == 5'd19);", "wire       in_lv = 1'b0;")
+V["K11_no_colors"] = rep(K, "    else if (al_px)   rgb = acolor;", "    else if (al_px)   rgb = 6'b11_11_11;")
+V["K12_no_pbx_store"] = rep(K, "x[2] && (x[9:3] == pbx)", "x[2] && (x[9:3] == plx + 7'd1)")
 for f in sorted(os.listdir("exp")):
-    if f.endswith(".v"):
+    if f.endswith(".v") and f not in ("K_opt.v", "L_opt_bitmapfont.v"):
         V[f[:-2]] = open("exp/" + f).read()
 
 DU = "-dont_use *_1 -dont_use *_4 -dont_use *_6 -dont_use *_8 -dont_use *_12 -dont_use *_16 -dont_use *clk* -dont_use *dly* -dont_use *probe* -dont_use *lpflow* -dont_use *buf_*"
@@ -49,7 +51,7 @@ tee -q -o stat.json stat -json -liberty hd.lib
             break
         except Exception as e:
             print(name, "FAILED", repr(e), (r.stdout + r.stderr)[-600:])
-base = res["A_baseline"][0]
+base = res["K_opt"][0]
 print(f"{'variant':28s} {'area':>9s} {'delta':>8s} {'FFs':>4s}")
 for k, (a, ff, mode) in res.items():
     print(f"{k:28s} {a:9.0f} {a-base:8.0f} {ff:4d} {mode}")
