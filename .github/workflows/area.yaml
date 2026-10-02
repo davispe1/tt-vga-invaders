@@ -1,0 +1,10 @@
+name: area
+on: push
+jobs:
+  area:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq yosys > /dev/null
+      - run: curl -sSL -o hd.lib https://raw.githubusercontent.com/The-OpenROAD-Project/OpenROAD-flow-scripts/master/flow/platforms/sky130hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+      - run: yosys -V && python3 exp/run.py
