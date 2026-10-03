@@ -306,6 +306,65 @@ module tt_um_davispe1_invaders(
   end
   wire txt = top && (in_sc || in_lv) && (cx != 2'd3) && font;
 
+  // ---------------- Mensaje ----------------
+  // Mensaje centrado en x = 320: "LACSS 2026 PANAMA" (66 columnas de 4 px)
+  reg [4:0] tcol;   // columna de la fuente, bit 4 = fila superior
+  always @(*) begin
+    case (x[8:2])
+      7'd47: tcol = 5'b11111;
+      7'd48: tcol = 5'b00001;
+      7'd49: tcol = 5'b00001;
+      7'd51: tcol = 5'b11111;
+      7'd52: tcol = 5'b10100;
+      7'd53: tcol = 5'b11111;
+      7'd55: tcol = 5'b11111;
+      7'd56: tcol = 5'b10001;
+      7'd57: tcol = 5'b10001;
+      7'd59: tcol = 5'b11101;
+      7'd60: tcol = 5'b10101;
+      7'd61: tcol = 5'b10111;
+      7'd63: tcol = 5'b11101;
+      7'd64: tcol = 5'b10101;
+      7'd65: tcol = 5'b10111;
+      7'd69: tcol = 5'b10111;
+      7'd70: tcol = 5'b10101;
+      7'd71: tcol = 5'b11101;
+      7'd73: tcol = 5'b11111;
+      7'd74: tcol = 5'b10001;
+      7'd75: tcol = 5'b11111;
+      7'd77: tcol = 5'b10111;
+      7'd78: tcol = 5'b10101;
+      7'd79: tcol = 5'b11101;
+      7'd81: tcol = 5'b11111;
+      7'd82: tcol = 5'b10101;
+      7'd83: tcol = 5'b10111;
+      7'd87: tcol = 5'b11111;
+      7'd88: tcol = 5'b10100;
+      7'd89: tcol = 5'b11100;
+      7'd91: tcol = 5'b11111;
+      7'd92: tcol = 5'b10100;
+      7'd93: tcol = 5'b11111;
+      7'd95: tcol = 5'b11111;
+      7'd96: tcol = 5'b01000;
+      7'd97: tcol = 5'b00100;
+      7'd98: tcol = 5'b11111;
+      7'd100: tcol = 5'b11111;
+      7'd101: tcol = 5'b10100;
+      7'd102: tcol = 5'b11111;
+      7'd104: tcol = 5'b11111;
+      7'd105: tcol = 5'b01000;
+      7'd106: tcol = 5'b00100;
+      7'd107: tcol = 5'b01000;
+      7'd108: tcol = 5'b11111;
+      7'd110: tcol = 5'b11111;
+      7'd111: tcol = 5'b10100;
+      7'd112: tcol = 5'b11111;
+      default: tcol = 5'b00000;
+    endcase
+  end
+  wire [2:0] trow = y[4:2];   // filas 2..6 de 4 px: y 8..27, alineado con el puntaje
+  wire       msg  = (y[9:5] == 5'd0) && ~x[9] && (trow >= 3'd2) && (trow <= 3'd6) && tcol[3'd6 - trow];
+
   // ---------------- Color ----------------
   wire ground = (y[9:1] == 9'd237);                         // y 474..475
 
@@ -320,7 +379,7 @@ module tt_um_davispe1_invaders(
 
   reg [5:0] rgb;
   always @(*) begin
-    if (txt | pb_px)  rgb = 6'b11_11_11;
+    if (txt | msg | pb_px) rgb = 6'b11_11_11;
     else if (ship_px) rgb = over ? 6'b11_00_00 : 6'b00_11_00;
     else if (eb_px)   rgb = 6'b11_01_00;
     else if (al_px)   rgb = acolor;

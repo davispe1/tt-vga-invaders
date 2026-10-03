@@ -21,6 +21,10 @@ The formation speeds up as invaders are destroyed. Clearing all 32 starts a new 
 The score (top left) counts 10 points per invader and the remaining lives are shown top right.
 The game ends when the player loses all 3 lives or the invaders reach the player's row.
 
+The top bar also shows "LACSS 2026 PANAMA" (IEEE Latin America & the Caribbean Semiconductor Summit),
+drawn from a small column ROM in a 5-pixel-high font. On the die itself there is a 16x16 um "DP" gear
+logo drawn in met4 next to the logic.
+
 ## How to test
 
 Connect a TinyVGA PMOD and a VGA monitor, and buttons to the inputs:
