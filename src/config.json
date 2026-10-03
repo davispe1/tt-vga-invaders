@@ -31,6 +31,24 @@
   "//": "https://tinytapeout.com/faq/#how-can-i-map-an-additional-external-clock-to-one-of-the-gpios",
   "CLOCK_PORT": "clk",
 
+  "//": "Logo en met4 (silicon art), entre las lineas de alimentacion x=22.38 y x=57.95",
+  "MACROS": {
+    "davispe1_logo": {
+      "instances": {
+        "logo": {
+          "location": [23.92, 2.72],
+          "orientation": "N"
+        }
+      },
+      "gds": ["dir::../macros/davispe1_logo.gds"],
+      "lef": ["dir::../macros/davispe1_logo.lef"]
+    }
+  },
+  "FP_MACRO_HORIZONTAL_HALO": 0,
+  "FP_MACRO_VERTICAL_HALO": 0,
+  "IGNORE_DISCONNECTED_MODULES": ["davispe1_logo", "logo"],
+  "ERROR_ON_DISCONNECTED_PINS": false,
+
   "//": "Configuration docs: https://librelane.readthedocs.io/en/latest/reference/configuration.html",
 
   "//": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",

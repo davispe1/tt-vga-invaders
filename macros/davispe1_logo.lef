@@ -1,0 +1,19 @@
+# LEF file generated for davispe1_logo
+VERSION 5.8 ;
+NAMESCASESENSITIVE ON ;
+DIVIDERCHAR "/" ;
+BUSBITCHARS "[]" ;
+UNITS
+   DATABASE MICRONS 1000 ;
+END UNITS
+
+MACRO davispe1_logo
+   CLASS BLOCK ;
+   FOREIGN davispe1_logo 0 0 ;
+   SIZE 16.000 BY 16.000 ;
+   SYMMETRY X Y ;
+   OBS
+      LAYER met4 ;
+         RECT 0.000 0.000 16.000 16.000 ;
+   END
+END davispe1_logo

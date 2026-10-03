@@ -9,6 +9,11 @@
 
 `default_nettype none
 
+// Logo en met4: macro sin puertos, solo arte
+(* blackbox *) (* keep *)
+module davispe1_logo ();
+endmodule
+
 module tt_um_davispe1_invaders(
   input  wire [7:0] ui_in,    // [0] izquierda, [1] derecha, [2] disparo
   output wire [7:0] uo_out,   // TinyVGA PMOD
@@ -345,5 +350,9 @@ module tt_um_davispe1_invaders(
   assign uio_oe  = 8'b1000_0000;
 
   wire _unused_ok = &{ena, ui_in[7:3], uio_in};
+
+  // ---------------- Logo ----------------
+  (* keep *)
+  davispe1_logo logo();
 
 endmodule
