@@ -62,7 +62,7 @@ module tt_um_davispe1_invaders(
   reg        efound;          // hay un alien que puede disparar este frame
   reg        fpar;            // paridad de frame (bala enemiga a media velocidad)
   reg        over;
-  reg        hard;            // desde la 2a oleada: bala enemiga al doble de velocidad y sin pausa
+  reg  [1:0] level;           // oleada: 0 = la 1a ... 3 = la 4a o mas (satura en 3)
   reg  [1:0] lives;
   reg  [3:0] ones, tens;      // puntaje BCD, se muestra con un 0 fijo detras
   reg  [6:0] lfsr;
@@ -120,6 +120,13 @@ module tt_um_davispe1_invaders(
   wire restart = ~rst_n | (ftick & over & btn[2] & (&stimer));
   wire newwave = restart | (kill & (&kills));
 
+  // Dificultad por oleada
+  wire       hard   = |level;                        // desde la 2a: bala enemiga al doble de velocidad y sin pausa
+  wire [1:0] lvl_up = level + {1'b0, ~&level};       // nivel de la siguiente oleada (satura en 3)
+  // Paso de la formacion cada (32 - kills - 4*level) frames, minimo 1
+  wire [5:0] tdiff  = {1'b0, ~kills} - {2'b00, level, 2'b00};
+  wire [4:0] tstep  = tdiff[5] ? 5'd0 : tdiff[4:0];
+
   always @(posedge clk) begin
     if (newwave) alive <= 32'hFFFF_FFFF;
     else if (kill) alive[{arow, acol}] <= 1'b0;
@@ -128,7 +135,7 @@ module tt_um_davispe1_invaders(
   always @(posedge clk) begin
     if (restart) begin
       over   <= 1'b0;
-      hard   <= 1'b0;
+      level  <= 2'd0;
       lives  <= 2'd3;
       ones   <= 4'd0;
       tens   <= 4'd0;
@@ -162,7 +169,7 @@ module tt_um_davispe1_invaders(
         kills <= kills + 5'd1;
         snd_k <= 2'd2;
         snd_t <= 4'd10;
-        if (&kills) hard <= 1'b1;                        // oleada completada
+        if (&kills) level <= lvl_up;                     // oleada completada: sube de nivel
         if (ones == 4'd9) begin
           ones <= 4'd0;
           tens <= (tens == 4'd9) ? 4'd0 : tens + 4'd1;
@@ -202,8 +209,8 @@ module tt_um_davispe1_invaders(
         if (over) begin
           if (~&stimer) stimer <= stimer + 5'd1;
         end else begin
-          // Formacion: un paso cada (32 - kills) frames
-          if (stimer >= ~kills) begin
+          // Formacion: un paso cada (32 - kills - 4*level) frames
+          if (stimer >= tstep) begin
             stimer <= 5'd0;
             aframe <= ~aframe;
             if (dir ? edge_r : edge_l) begin
@@ -260,7 +267,7 @@ module tt_um_davispe1_invaders(
 
     if (newwave) begin
       fx     <= 7'd24;
-      fy     <= 5'd4;
+      fy     <= {3'b001, restart ? 2'd0 : lvl_up};  // fila 4 + nivel: cada oleada empieza 16 px mas abajo
       dir    <= 1'b1;
       aframe <= 1'b0;
       stimer <= 5'd0;
