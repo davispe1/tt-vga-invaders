@@ -18,6 +18,7 @@ There is no framebuffer: every pixel is computed on the fly from a handful of re
 choosing which invader fires are all detected while the picture is being drawn, so they cost almost no logic.
 
 The formation speeds up as invaders are destroyed. Clearing all 32 starts a new wave.
+From the second wave on, the invaders' shot falls twice as fast and is fired again as soon as it is gone.
 The score (top left) counts 10 points per invader and the remaining lives are shown top right.
 The game ends when the player loses all 3 lives or the invaders reach the player's row.
 

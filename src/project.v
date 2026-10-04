@@ -62,6 +62,7 @@ module tt_um_davispe1_invaders(
   reg        efound;          // hay un alien que puede disparar este frame
   reg        fpar;            // paridad de frame (bala enemiga a media velocidad)
   reg        over;
+  reg        hard;            // desde la 2a oleada: bala enemiga al doble de velocidad y sin pausa
   reg  [1:0] lives;
   reg  [3:0] ones, tens;      // puntaje BCD, se muestra con un 0 fijo detras
   reg  [6:0] lfsr;
@@ -127,6 +128,7 @@ module tt_um_davispe1_invaders(
   always @(posedge clk) begin
     if (restart) begin
       over   <= 1'b0;
+      hard   <= 1'b0;
       lives  <= 2'd3;
       ones   <= 4'd0;
       tens   <= 4'd0;
@@ -160,6 +162,7 @@ module tt_um_davispe1_invaders(
         kills <= kills + 5'd1;
         snd_k <= 2'd2;
         snd_t <= 4'd10;
+        if (&kills) hard <= 1'b1;                        // oleada completada
         if (ones == 4'd9) begin
           ones <= 4'd0;
           tens <= (tens == 4'd9) ? 4'd0 : tens + 4'd1;
@@ -237,11 +240,11 @@ module tt_um_davispe1_invaders(
 
           // Bala enemiga
           if (eba) begin
-            if (fpar) begin
+            if (fpar | hard) begin
               if (&eby[5:2]) eba <= 1'b0;                // y >= 480
               else           eby <= eby + 6'd1;
             end
-          end else if (efound && lfsr[3]) begin
+          end else if (efound && (lfsr[3] | hard)) begin
             eba <= 1'b1;
           end
 
